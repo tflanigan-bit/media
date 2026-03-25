@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VOIDPLAYER</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080810;
+    --surface: #0f0f1a;
+    --surface2: #161628;
+    --accent: #b94fff;
+    --accent2: #ff2d9b;
+    --accent3: #00f0c8;
+    --text: #e8e4ff;
+    --muted: #6b6490;
+    --border: rgba(185,79,255,0.18);
+    --glow: 0 0 30px rgba(185,79,255,0.35);
+    --glow2: 0 0 30px rgba(255,45,155,0.3);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated bg */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 10% 0%, rgba(185,79,255,0.08) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 30% at 90% 100%, rgba(255,45,155,0.07) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 50% at 50% 50%, rgba(0,240,200,0.03) 0%, transparent 80%);
+    pointer-events: none; z-index: 0;
+  }
+
+  .app { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 1.5rem 1rem 8rem; }
+
+  /* Header */
+  header { text-align: center; padding: 2rem 0 2.5rem; }
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(3rem, 10vw, 6rem);
+    letter-spacing: 0.08em;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 50%, var(--accent3) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    line-height: 1;
+  }
+  .tagline { font-family: 'Space Mono', monospace; font-size: 0.65rem; color: var(--muted); letter-spacing: 0.3em; text-transform: uppercase; margin-top: 0.4rem; }
+
+  /* Upload zone */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 16px;
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.25s;
+    background: rgba(185,79,255,0.03);
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(185,79,255,0.08);
+    box-shadow: var(--glow);
+  }
+  .upload-zone.drag-over { transform: scale(1.01); }
+  .upload-icon { font-size: 2.5rem; margin-bottom: 0.8rem; display: block; }
+  .upload-zone h3 { font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; letter-spacing: 0.1em; color: var(--accent); }
+  .upload-zone p { color: var(--muted); font-size: 0.8rem; margin-top: 0.3rem; font-family: 'Space Mono', monospace; }
+  #fileInput { display: none; }
+
+  /* Library */
+  .library-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;
+  }
+  .library-title {
+    font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem;
+    letter-spacing: 0.12em; color: var(--accent3);
+  }
+  .track-count { font-family: 'Space Mono', monospace; font-size: 0.7rem; color: var(--muted); }
+
+  .search-bar {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 0.5rem 1rem;
+    color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.85rem;
+    width: 100%; max-width: 260px; outline: none; transition: border-color 0.2s;
+  }
+  .search-bar:focus { border-color: var(--accent); }
+  .search-bar::placeholder { color: var(--muted); }
+
+  .track-list { display: flex; flex-direction: column; gap: 0.5rem; }
+
+  .track-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    display: flex; align-items: center; gap: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative; overflow: hidden;
+  }
+  .track-item:hover { border-color: var(--accent); background: var(--surface2); transform: translateX(2px); }
+  .track-item.active {
+    border-color: var(--accent);
+    background: var(--surface2);
+    box-shadow: var(--glow);
+  }
+  .track-item.active::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    background: linear-gradient(to bottom, var(--accent), var(--accent2));
+    border-radius: 3px 0 0 3px;
+  }
+
+  .track-num {
+    font-family: 'Space Mono', monospace; font-size: 0.7rem;
+    color: var(--muted); min-width: 24px; text-align: right;
+  }
+  .track-item.active .track-num { color: var(--accent); }
+
+  .track-art {
+    width: 42px; height: 42px; border-radius: 8px;
+    background: linear-gradient(135deg, var(--surface2), #1a1a30);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; flex-shrink: 0;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .track-art img { width: 100%; height: 100%; object-fit: cover; }
+
+  .track-info { flex: 1; min-width: 0; }
+  .track-name {
+    font-weight: 500; font-size: 0.9rem;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .track-item.active .track-name { color: var(--accent); }
+  .track-meta { font-size: 0.72rem; color: var(--muted); margin-top: 0.15rem; font-family: 'Space Mono', monospace; }
+
+  .track-actions { display: flex; align-items: center; gap: 0.4rem; flex-shrink: 0; }
+
+  .btn-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    border: 1px solid var(--border); background: transparent;
+    color: var(--muted); cursor: pointer; display: flex; align-items: center;
+    justify-content: center; font-size: 0.85rem; transition: all 0.2s;
+  }
+  .btn-icon:hover { color: var(--text); border-color: var(--accent); background: rgba(185,79,255,0.1); }
+  .btn-icon.danger:hover { color: #ff4466; border-color: #ff4466; background: rgba(255,68,102,0.1); }
+
+  .playing-bars {
+    display: flex; align-items: flex-end; gap: 2px; height: 18px;
+    padding: 0 2px;
+  }
+  .playing-bars span {
+    width: 3px; background: var(--accent);
+    border-radius: 2px; animation: bars 0.7s ease-in-out infinite alternate;
+  }
+  .playing-bars span:nth-child(2) { animation-delay: 0.15s; }
+  .playing-bars span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes bars {
+    from { height: 4px; } to { height: 16px; }
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center; padding: 3rem 1rem;
+    color: var(--muted); font-family: 'Space Mono', monospace; font-size: 0.78rem;
+  }
+  .empty-state .big { font-size: 2.5rem; display: block; margin-bottom: 0.7rem; }
+
+  /* Player bar */
+  .player-bar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: rgba(8,8,16,0.92);
+    backdrop-filter: blur(24px) saturate(180%);
+    border-top: 1px solid var(--border);
+    padding: 0.8rem 1.2rem 1rem;
+    z-index: 100;
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.6);
+  }
+  .player-bar.hidden { display: none; }
+
+  .player-inner { max-width: 900px; margin: 0 auto; }
+
+  /* Progress */
+  .progress-row {
+    display: flex; align-items: center; gap: 0.7rem;
+    margin-bottom: 0.7rem;
+  }
+  .time-label { font-family: 'Space Mono', monospace; font-size: 0.65rem; color: var(--muted); min-width: 36px; }
+  .time-label.right { text-align: right; }
+
+  .progress-wrap {
+    flex: 1; height: 4px; background: rgba(255,255,255,0.1);
+    border-radius: 4px; cursor: pointer; position: relative;
+  }
+  .progress-fill {
+    height: 100%; border-radius: 4px;
+    background: linear-gradient(to right, var(--accent), var(--accent2));
+    transition: width 0.1s linear;
+    position: relative;
+  }
+  .progress-fill::after {
+    content: ''; position: absolute; right: -4px; top: 50%;
+    transform: translateY(-50%); width: 10px; height: 10px;
+    background: #fff; border-radius: 50%;
+    box-shadow: 0 0 6px rgba(185,79,255,0.8);
+    opacity: 0; transition: opacity 0.15s;
+  }
+  .progress-wrap:hover .progress-fill::after { opacity: 1; }
+
+  /* Controls row */
+  .controls-row {
+    display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;
+  }
+
+  .now-playing { flex: 1; min-width: 0; }
+  .now-name {
+    font-size: 0.85rem; font-weight: 500;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    color: var(--text);
+  }
+  .now-sub { font-size: 0.68rem; color: var(--muted); font-family: 'Space Mono', monospace; margin-top: 0.1rem; }
+
+  .ctrl-btns { display: flex; align-items: center; gap: 0.3rem; }
+
+  .ctrl-btn {
+    width: 38px; height: 38px; border-radius: 10px;
+    border: none; background: transparent;
+    color: var(--muted); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; transition: all 0.15s;
+  }
+  .ctrl-btn:hover { color: var(--text); }
+  .ctrl-btn.primary {
+    width: 46px; height: 46px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white; font-size: 1.1rem;
+    box-shadow: 0 4px 20px rgba(185,79,255,0.4);
+  }
+  .ctrl-btn.primary:hover { transform: scale(1.05); box-shadow: 0 6px 24px rgba(185,79,255,0.6); }
+  .ctrl-btn.active { color: var(--accent3); }
+
+  .volume-wrap { display: flex; align-items: center; gap: 0.5rem; }
+  .vol-icon { font-size: 0.9rem; color: var(--muted); cursor: pointer; }
+  .vol-slider {
+    -webkit-appearance: none; appearance: none;
+    width: 70px; height: 3px;
+    border-radius: 3px; outline: none; cursor: pointer;
+    background: linear-gradient(to right, var(--accent) 0%, var(--accent) var(--vol-pct, 80%), rgba(255,255,255,0.15) var(--vol-pct, 80%));
+  }
+  .vol-slider::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 12px; height: 12px;
+    border-radius: 50%; background: white; cursor: pointer;
+    box-shadow: 0 0 6px rgba(185,79,255,0.6);
+  }
+
+  /* Canvas visualizer */
+  #visualizer {
+    width: 100%; height: 40px; display: block;
+    margin-bottom: 0.5rem; border-radius: 8px;
+    opacity: 0.7;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+    background: var(--surface2); border: 1px solid var(--accent);
+    border-radius: 10px; padding: 0.6rem 1.2rem;
+    font-family: 'Space Mono', monospace; font-size: 0.72rem;
+    color: var(--accent); z-index: 200;
+    animation: toastIn 0.3s ease, toastOut 0.3s ease 1.7s forwards;
+    white-space: nowrap;
+  }
+  @keyframes toastIn { from { opacity:0; transform: translateX(-50%) translateY(10px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
+  @keyframes toastOut { to { opacity:0; transform: translateX(-50%) translateY(-8px); } }
+
+  @media (max-width: 500px) {
+    .vol-slider { width: 50px; }
+    .track-num { display: none; }
+    .track-meta { display: none; }
+    .ctrl-btn:not(.primary):not([data-prev]):not([data-next]) { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <header>
+    <div class="logo">VOIDPLAYER</div>
+    <div class="tagline">drop it. play it. keep it.</div>
+  </header>
+
+  <div class="upload-zone" id="uploadZone">
+    <span class="upload-icon">🎵</span>
+    <h3>Drop Files Here</h3>
+    <p>MP3, WAV, OGG, FLAC, M4A — any audio goes</p>
+    <input type="file" id="fileInput" accept="audio/*" multiple>
+  </div>
+
+  <div class="library-header">
+    <div>
+      <div class="library-title">Library</div>
+      <div class="track-count" id="trackCount">0 tracks</div>
+    </div>
+    <input class="search-bar" id="searchBar" placeholder="search tracks..." type="text">
+  </div>
+
+  <div class="track-list" id="trackList">
+    <div class="empty-state" id="emptyState">
+      <span class="big">📭</span>
+      Upload some tracks to get started.
+    </div>
+  </div>
+</div>
+
+<!-- Player bar -->
+<div class="player-bar hidden" id="playerBar">
+  <div class="player-inner">
+    <canvas id="visualizer" height="40"></canvas>
+    <div class="progress-row">
+      <span class="time-label" id="timeEl">0:00</span>
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-fill" id="progressFill" style="width:0%"></div>
+      </div>
+      <span class="time-label right" id="durEl">0:00</span>
+    </div>
+    <div class="controls-row">
+      <div class="now-playing">
+        <div class="now-name" id="nowName">—</div>
+        <div class="now-sub" id="nowSub">voidplayer</div>
+      </div>
+      <div class="ctrl-btns">
+        <button class="ctrl-btn" id="shuffleBtn" title="Shuffle">🔀</button>
+        <button class="ctrl-btn" data-prev title="Previous">⏮</button>
+        <button class="ctrl-btn primary" id="playPauseBtn" title="Play/Pause">▶</button>
+        <button class="ctrl-btn" data-next title="Next">⏭</button>
+        <button class="ctrl-btn" id="repeatBtn" title="Repeat">🔁</button>
+      </div>
+      <div class="volume-wrap">
+        <span class="vol-icon" id="volIcon">🔊</span>
+        <input type="range" class="vol-slider" id="volSlider" min="0" max="1" step="0.01" value="0.8">
+      </div>
+    </div>
+  </div>
+</div>
+
+<audio id="audioEl"></audio>
+
+<script>
+// ── IndexedDB ──────────────────────────────────────
+const DB_NAME = 'voidplayer', DB_VER = 1, STORE = 'tracks';
+let db;
+
+function openDB() {
+  return new Promise((res, rej) => {
+    const req = indexedDB.open(DB_NAME, DB_VER);
+    req.onupgradeneeded = e => e.target.result.createObjectStore(STORE, { keyPath: 'id' });
+    req.onsuccess = e => { db = e.target.result; res(); };
+    req.onerror = () => rej(req.error);
+  });
+}
+
+function dbPut(track) {
+  return new Promise((res, rej) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).put(track).onsuccess = res;
+    tx.onerror = () => rej(tx.error);
+  });
+}
+
+function dbGetAll() {
+  return new Promise((res, rej) => {
+    const req = db.transaction(STORE).objectStore(STORE).getAll();
+    req.onsuccess = () => res(req.result);
+    req.onerror = () => rej(req.error);
+  });
+}
+
+function dbDelete(id) {
+  return new Promise((res, rej) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).delete(id).onsuccess = res;
+    tx.onerror = () => rej(tx.error);
+  });
+}
+
+// ── State ──────────────────────────────────────────
+let tracks = [];
+let currentIdx = -1;
+let isPlaying = false;
+let shuffle = false;
+let repeat = false; // false | 'one' | 'all'
+let shuffleOrder = [];
+let searchQuery = '';
+
+// ── DOM refs ───────────────────────────────────────
+const audio = document.getElementById('audioEl');
+const playerBar = document.getElementById('playerBar');
+const playPauseBtn = document.getElementById('playPauseBtn');
+const shuffleBtn = document.getElementById('shuffleBtn');
+const repeatBtn = document.getElementById('repeatBtn');
+const progressFill = document.getElementById('progressFill');
+const progressWrap = document.getElementById('progressWrap');
+const timeEl = document.getElementById('timeEl');
+const durEl = document.getElementById('durEl');
+const nowName = document.getElementById('nowName');
+const nowSub = document.getElementById('nowSub');
+const trackList = document.getElementById('trackList');
+const trackCount = document.getElementById('trackCount');
+const emptyState = document.getElementById('emptyState');
+const volSlider = document.getElementById('volSlider');
+const volIcon = document.getElementById('volIcon');
+const canvas = document.getElementById('visualizer');
+const ctx2d = canvas.getContext('2d');
+
+// ── Visualizer ─────────────────────────────────────
+let audioCtx, analyser, source, dataArray, animFrame;
+
+function setupAnalyser() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 128;
+  dataArray = new Uint8Array(analyser.frequencyBinCount);
+  source = audioCtx.createMediaElementSource(audio);
+  source.connect(analyser);
+  analyser.connect(audioCtx.destination);
+}
+
+function drawViz() {
+  animFrame = requestAnimationFrame(drawViz);
+  const W = canvas.width, H = canvas.height;
+  ctx2d.clearRect(0, 0, W, H);
+  if (!analyser) return;
+  analyser.getByteFrequencyData(dataArray);
+  const bars = dataArray.length;
+  const barW = W / bars;
+  for (let i = 0; i < bars; i++) {
+    const v = dataArray[i] / 255;
+    const h = v * H;
+    const hue = 270 + i * 1.5;
+    ctx2d.fillStyle = `hsla(${hue},90%,65%,${0.4 + v*0.6})`;
+    ctx2d.fillRect(i * barW, H - h, barW - 1, h);
+  }
+}
+
+function resizeCanvas() {
+  canvas.width = canvas.offsetWidth * devicePixelRatio;
+  canvas.height = 40 * devicePixelRatio;
+  ctx2d.scale(devicePixelRatio, devicePixelRatio);
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+// ── Helpers ────────────────────────────────────────
+function fmt(s) {
+  if (!s || isNaN(s)) return '0:00';
+  const m = Math.floor(s / 60), sec = Math.floor(s % 60);
+  return `${m}:${sec.toString().padStart(2,'0')}`;
+}
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+function toast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast'; el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2100);
+}
+
+function buildShuffleOrder() {
+  shuffleOrder = tracks.map((_,i) => i);
+  for (let i = shuffleOrder.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffleOrder[i], shuffleOrder[j]] = [shuffleOrder[j], shuffleOrder[i]];
+  }
+}
+
+// ── Render ─────────────────────────────────────────
+function render() {
+  const filtered = tracks.filter(t => t.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  trackCount.textContent = `${tracks.length} track${tracks.length !== 1 ? 's' : ''}`;
+  emptyState.style.display = tracks.length === 0 ? 'block' : 'none';
+
+  // Remove old items
+  [...trackList.querySelectorAll('.track-item')].forEach(el => el.remove());
+
+  filtered.forEach((t, fi) => {
+    const realIdx = tracks.indexOf(t);
+    const div = document.createElement('div');
+    div.className = 'track-item' + (realIdx === currentIdx ? ' active' : '');
+    div.dataset.idx = realIdx;
+
+    const isActive = realIdx === currentIdx;
+
+    div.innerHTML = `
+      <span class="track-num">${isActive && isPlaying ? '' : fi + 1}</span>
+      <div class="track-art">${t.art ? `<img src="${t.art}" alt="">` : '🎵'}</div>
+      <div class="track-info">
+        <div class="track-name">${escHtml(t.name)}</div>
+        <div class="track-meta">${t.size} · ${t.type}</div>
+      </div>
+      <div class="track-actions">
+        ${isActive && isPlaying ? '<div class="playing-bars"><span></span><span></span><span></span></div>' : ''}
+        <button class="btn-icon dl-btn" title="Download" data-id="${t.id}">⬇</button>
+        <button class="btn-icon danger del-btn" title="Delete" data-id="${t.id}">✕</button>
+      </div>
+    `;
+
+    div.addEventListener('click', (e) => {
+      if (e.target.closest('.dl-btn') || e.target.closest('.del-btn')) return;
+      playTrack(realIdx);
+    });
+
+    div.querySelector('.dl-btn').addEventListener('click', () => downloadTrack(t));
+    div.querySelector('.del-btn').addEventListener('click', () => deleteTrack(t.id));
+
+    trackList.appendChild(div);
+  });
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── Playback ───────────────────────────────────────
+async function playTrack(idx) {
+  if (idx < 0 || idx >= tracks.length) return;
+  currentIdx = idx;
+  const t = tracks[idx];
+  
+  // Resume AudioContext if needed
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+
+  // Load blob from DB as URL
+  const url = await getBlobUrl(t.id);
+  if (!url) { toast('⚠ Could not load track'); return; }
+
+  audio.src = url;
+  audio.volume = parseFloat(volSlider.value);
+  await audio.play().catch(() => {});
+  isPlaying = true;
+
+  setupAnalyser();
+  cancelAnimationFrame(animFrame);
+  drawViz();
+
+  playerBar.classList.remove('hidden');
+  playPauseBtn.textContent = '⏸';
+  nowName.textContent = t.name;
+  nowSub.textContent = `track ${idx + 1} of ${tracks.length}`;
+  render();
+}
+
+function getBlobUrl(id) {
+  return new Promise((res) => {
+    const req = db.transaction(STORE).objectStore(STORE).get(id);
+    req.onsuccess = () => {
+      const t = req.result;
+      if (!t) return res(null);
+      const url = URL.createObjectURL(t.blob);
+      res(url);
+    };
+    req.onerror = () => res(null);
+  });
+}
+
+function togglePlay() {
+  if (currentIdx < 0) { if (tracks.length) playTrack(0); return; }
+  if (isPlaying) { audio.pause(); isPlaying = false; playPauseBtn.textContent = '▶'; cancelAnimationFrame(animFrame); }
+  else { audio.play(); isPlaying = true; playPauseBtn.textContent = '⏸'; drawViz(); }
+  render();
+}
+
+function playNext() {
+  if (!tracks.length) return;
+  if (shuffle) {
+    const pos = shuffleOrder.indexOf(currentIdx);
+    const nextPos = (pos + 1) % shuffleOrder.length;
+    playTrack(shuffleOrder[nextPos]);
+  } else {
+    playTrack((currentIdx + 1) % tracks.length);
+  }
+}
+
+function playPrev() {
+  if (!tracks.length) return;
+  if (audio.currentTime > 3) { audio.currentTime = 0; return; }
+  if (shuffle) {
+    const pos = shuffleOrder.indexOf(currentIdx);
+    const prevPos = (pos - 1 + shuffleOrder.length) % shuffleOrder.length;
+    playTrack(shuffleOrder[prevPos]);
+  } else {
+    playTrack((currentIdx - 1 + tracks.length) % tracks.length);
+  }
+}
+
+audio.addEventListener('timeupdate', () => {
+  if (!audio.duration) return;
+  const pct = (audio.currentTime / audio.duration) * 100;
+  progressFill.style.width = pct + '%';
+  timeEl.textContent = fmt(audio.currentTime);
+  durEl.textContent = fmt(audio.duration);
+});
+
+audio.addEventListener('ended', () => {
+  if (repeat === 'one') { audio.currentTime = 0; audio.play(); return; }
+  if (repeat === 'all' || shuffle) { playNext(); return; }
+  if (currentIdx < tracks.length - 1) { playNext(); }
+  else { isPlaying = false; playPauseBtn.textContent = '▶'; render(); cancelAnimationFrame(animFrame); }
+});
+
+progressWrap.addEventListener('click', (e) => {
+  const rect = progressWrap.getBoundingClientRect();
+  const pct = (e.clientX - rect.left) / rect.width;
+  audio.currentTime = pct * audio.duration;
+});
+
+// ── Controls ───────────────────────────────────────
+playPauseBtn.addEventListener('click', togglePlay);
+document.querySelector('[data-next]').addEventListener('click', playNext);
+document.querySelector('[data-prev]').addEventListener('click', playPrev);
+
+shuffleBtn.addEventListener('click', () => {
+  shuffle = !shuffle;
+  if (shuffle) buildShuffleOrder();
+  shuffleBtn.classList.toggle('active', shuffle);
+  toast(shuffle ? '🔀 Shuffle ON' : '🔀 Shuffle OFF');
+});
+
+repeatBtn.addEventListener('click', () => {
+  if (!repeat) { repeat = 'all'; repeatBtn.textContent = '🔁'; repeatBtn.classList.add('active'); toast('🔁 Repeat ALL'); }
+  else if (repeat === 'all') { repeat = 'one'; repeatBtn.textContent = '🔂'; toast('🔂 Repeat ONE'); }
+  else { repeat = false; repeatBtn.textContent = '🔁'; repeatBtn.classList.remove('active'); toast('Repeat OFF'); }
+});
+
+volSlider.addEventListener('input', () => {
+  audio.volume = parseFloat(volSlider.value);
+  const pct = volSlider.value * 100;
+  volSlider.style.setProperty('--vol-pct', pct + '%');
+  volIcon.textContent = pct === 0 ? '🔇' : pct < 40 ? '🔈' : '🔊';
+});
+volSlider.style.setProperty('--vol-pct', '80%');
+
+// ── Upload ─────────────────────────────────────────
+const uploadZone = document.getElementById('uploadZone');
+const fileInput = document.getElementById('fileInput');
+
+uploadZone.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', () => handleFiles(fileInput.files));
+
+uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('drag-over'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+uploadZone.addEventListener('drop', (e) => {
+  e.preventDefault(); uploadZone.classList.remove('drag-over');
+  handleFiles(e.dataTransfer.files);
+});
+
+async function handleFiles(files) {
+  const audioFiles = [...files].filter(f => f.type.startsWith('audio/') || /\.(mp3|wav|ogg|flac|m4a|aac|opus)$/i.test(f.name));
+  if (!audioFiles.length) { toast('No audio files found!'); return; }
+  
+  let added = 0;
+  for (const file of audioFiles) {
+    const existing = tracks.find(t => t.name === file.name && t.size === fmtSize(file.size));
+    if (existing) continue;
+
+    const id = uid();
+    const art = await extractArt(file).catch(() => null);
+    
+    const track = {
+      id,
+      name: file.name.replace(/\.[^.]+$/, ''),
+      size: fmtSize(file.size),
+      type: file.name.split('.').pop().toUpperCase(),
+      art,
+      blob: file,
+    };
+
+    await dbPut(track);
+    const { blob, ...meta } = track;
+    tracks.push({ ...meta, blob: null }); // keep meta in memory, blob in DB
+    added++;
+  }
+
+  if (added) {
+    buildShuffleOrder();
+    toast(`✅ Added ${added} track${added > 1 ? 's' : ''}`);
+    render();
+  } else {
+    toast('All files already in library');
+  }
+  fileInput.value = '';
+}
+
+function fmtSize(bytes) {
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(0) + ' KB';
+  return (bytes/1024/1024).toFixed(1) + ' MB';
+}
+
+async function extractArt(file) {
+  // Try to get embedded album art using jsmediatags if available — skip for simplicity
+  // Return null so we use emoji fallback
+  return null;
+}
+
+// ── Download ───────────────────────────────────────
+async function downloadTrack(t) {
+  const url = await getBlobUrl(t.id);
+  if (!url) { toast('⚠ Could not get file'); return; }
+  const a = document.createElement('a');
+  a.href = url; a.download = t.name + '.' + t.type.toLowerCase();
+  a.click();
+  toast('⬇ Downloading...');
+}
+
+// ── Delete ─────────────────────────────────────────
+async function deleteTrack(id) {
+  const idx = tracks.findIndex(t => t.id === id);
+  if (idx < 0) return;
+  await dbDelete(id);
+  tracks.splice(idx, 1);
+  if (currentIdx === idx) {
+    audio.pause(); audio.src = '';
+    isPlaying = false; currentIdx = -1;
+    playerBar.classList.add('hidden');
+    cancelAnimationFrame(animFrame);
+  } else if (currentIdx > idx) {
+    currentIdx--;
+  }
+  buildShuffleOrder();
+  render();
+  toast('🗑 Removed');
+}
+
+// ── Search ─────────────────────────────────────────
+document.getElementById('searchBar').addEventListener('input', (e) => {
+  searchQuery = e.target.value;
+  render();
+});
+
+// ── Keyboard shortcuts ─────────────────────────────
+document.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
+  if (e.code === 'ArrowRight') playNext();
+  if (e.code === 'ArrowLeft') playPrev();
+});
+
+// ── Init ───────────────────────────────────────────
+async function init() {
+  await openDB();
+  const stored = await dbGetAll();
+  // Load metadata only (blobs stay in DB)
+  tracks = stored.map(({ blob, ...meta }) => ({ ...meta, blob: null }));
+  buildShuffleOrder();
+  render();
+}
+
+init();
+</script>
+</body>
+</html>
